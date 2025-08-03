@@ -6,3 +6,7 @@
     padding: 16px;
 }
 
+.loading {
+    display: flex;
+    justify-content: center;
+}

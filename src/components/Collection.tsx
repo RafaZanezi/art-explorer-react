@@ -13,6 +13,7 @@ import { fetchCollections, fetchObjectDetails } from "../api/api";
 import "../components/Collection.css";
 import { CollectionObject } from "../models/CollectionObject";
 import SearchInputs from "./SearchInputs";
+import Alert from "@mui/material/Alert";
 
 const Collection = () => {
   const [data, setData] = useState<{ objectIDs: number[] }>();
@@ -84,10 +85,11 @@ const Collection = () => {
           setFilters({ artist });
         }} />
 
-      {paginatedData && (
-        <div className="collection-container">
-          {loading && <CircularProgress />}
+      {loading && <div className="loading"><CircularProgress /></div>}
+      {error && !loading && <div className="error"><Alert severity="error">{error}</Alert></div>}
 
+      {!loading && paginatedData && (
+        <div className="collection-container">
           {paginatedData?.map(item => {
             return (
               <Card key={item.objectID} sx={{ width: 300 }}>
