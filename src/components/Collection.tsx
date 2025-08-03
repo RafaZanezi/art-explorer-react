@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
-import FavoriteIcon from "@mui/icons-material/Favorite";
+import CloseIcon from "@mui/icons-material/Close";
+import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
@@ -12,8 +13,9 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchCollections, fetchObjectDetails } from "../api/api";
 import "../components/Collection.css";
 import { CollectionObject } from "../models/CollectionObject";
+import Details from "./Details";
+import FavoriteButton from "./FavoriteButton";
 import SearchInputs from "./SearchInputs";
-import Alert from "@mui/material/Alert";
 
 const Collection = () => {
   const [data, setData] = useState<{ objectIDs: number[] }>();
@@ -25,6 +27,38 @@ const Collection = () => {
 
   const [pageSize, setPageSize] = useState(15);
   const [pageNumber, setPageNumber] = useState(1);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedObject, setSelectedObject] = useState<CollectionObject>();
+
+  const [favorites, setFavorites] = useState<{ [key: number]: boolean }>({});
+
+  // Carregar favoritos ao montar
+  useEffect(() => {
+    const storedFavorites: { [key: number]: boolean } = {};
+    
+    paginatedData.forEach(item => {
+      storedFavorites[item.objectID] = localStorage.getItem(`favorite-${item.objectID}`) === 'true';
+    });
+
+    setFavorites(storedFavorites);
+  }, [paginatedData]);
+
+  const toggleFavorite = (objectID: number | string) => {
+    const currentStatus = localStorage.getItem(`favorite-${objectID}`) === 'true';
+    const newStatus = !currentStatus;
+    localStorage.setItem(`favorite-${objectID}`, newStatus.toString());
+    setFavorites(prev => ({ ...prev, [objectID]: newStatus }));
+  };
+
+  const handleModalOpen = (item: CollectionObject) => {
+    setSelectedObject(item);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     setData(undefined);
@@ -105,10 +139,12 @@ const Collection = () => {
 
                 </CardContent>
                 <CardActions>
-                  <IconButton aria-label="add to favorites">
-                    <FavoriteIcon />
-                  </IconButton>
-                  <IconButton aria-label="more info">
+                  <FavoriteButton
+                    objectID={item.objectID}
+                    isFavorite={favorites[item.objectID] || false}
+                    toggleFavorite={toggleFavorite}
+                  />
+                  <IconButton aria-label="more info" onClick={() => handleModalOpen(item)}>
                     <AddIcon />
                   </IconButton>
                 </CardActions>
@@ -123,6 +159,18 @@ const Collection = () => {
           />
         </div>
       )}
+
+      <Details isOpen={isModalOpen} onClose={handleModalClose} details={selectedObject}>
+        <IconButton
+          edge="start"
+          color="inherit"
+          onClick={handleModalClose}
+          aria-label="close"
+        >
+          <CloseIcon />
+        </IconButton>
+      </Details>
+
     </>
   );
 }
