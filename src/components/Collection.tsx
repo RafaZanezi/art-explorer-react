@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
@@ -16,6 +17,9 @@ import { CollectionObject } from "../models/CollectionObject";
 import Details from "./Details";
 import FavoriteButton from "./FavoriteButton";
 import SearchInputs from "./SearchInputs";
+import Tooltip from "@mui/material/Tooltip";
+import FavoritesDrawer from "./FavoritesDrawer";
+import CardCollection from "./CardCollection";
 
 const Collection = () => {
   const [data, setData] = useState<{ objectIDs: number[] }>();
@@ -31,12 +35,13 @@ const Collection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedObject, setSelectedObject] = useState<CollectionObject>();
 
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [favorites, setFavorites] = useState<{ [key: number]: boolean }>({});
 
   // Carregar favoritos ao montar
   useEffect(() => {
     const storedFavorites: { [key: number]: boolean } = {};
-    
+
     paginatedData.forEach(item => {
       storedFavorites[item.objectID] = localStorage.getItem(`favorite-${item.objectID}`) === 'true';
     });
@@ -107,17 +112,37 @@ const Collection = () => {
     setPageNumber(value);
   };
 
+  const toggleDrawer = (open: boolean) => {
+    setIsDrawerOpen(open);
+  };
+
+  const getFavorites = (): CollectionObject[] => {
+    return paginatedData.filter(item => localStorage.getItem(`favorite-${item.objectID}`) === 'true');
+  };
+
   return (
     <>
-      <SearchInputs
-        handleDeptChange={(departmentId) => {
-          setLoading(true);
-          setFilters({ departmentId });
-        }}
-        handleArtistChange={(artist) => {
-          setLoading(true);
-          setFilters({ artist });
-        }} />
+      <div className="collection-header">
+        <Tooltip title="View my favorites" disableInteractive>
+          <IconButton onClick={() => toggleDrawer(true)} aria-label="add to favorites">
+            <FavoriteIcon />
+          </IconButton>
+        </Tooltip>
+
+        <FavoritesDrawer toggleDrawer={toggleDrawer} open={isDrawerOpen} favorites={getFavorites()} />
+
+        <div style={{ flexGrow: 1 }}>
+          <SearchInputs
+            handleDeptChange={(departmentId) => {
+              setLoading(true);
+              setFilters({ departmentId });
+            }}
+            handleArtistChange={(artist) => {
+              setLoading(true);
+              setFilters({ artist });
+            }} />
+        </div>
+      </div>
 
       {loading && <div className="loading"><CircularProgress /></div>}
       {error && !loading && <div className="error"><Alert severity="error">{error}</Alert></div>}
@@ -126,29 +151,13 @@ const Collection = () => {
         <div className="collection-container">
           {paginatedData?.map(item => {
             return (
-              <Card key={item.objectID} sx={{ width: 300 }}>
-                <CardMedia
-                  sx={{ height: 150 }}
-                  image={item.primaryImage || item.primaryImageSmall || "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small_2x/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg"}
-                  title={item.title || "Untitled"}
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    {item.title || "Untitled"}
-                  </Typography>
-
-                </CardContent>
-                <CardActions>
-                  <FavoriteButton
-                    objectID={item.objectID}
-                    isFavorite={favorites[item.objectID] || false}
-                    toggleFavorite={toggleFavorite}
-                  />
-                  <IconButton aria-label="more info" onClick={() => handleModalOpen(item)}>
-                    <AddIcon />
-                  </IconButton>
-                </CardActions>
-              </Card>
+              <CardCollection
+                key={item.objectID}
+                item={item}
+                toggleFavorite={toggleFavorite}
+                favorites={favorites}
+                handleModalOpen={handleModalOpen}
+              />
             )
           })}
 
