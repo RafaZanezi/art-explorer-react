@@ -1,25 +1,18 @@
-import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import Alert from "@mui/material/Alert";
-import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
-import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Pagination from "@mui/material/Pagination";
-import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
 import { useEffect, useMemo, useState } from "react";
 import { fetchCollections, fetchObjectDetails } from "../api/api";
 import "../components/Collection.css";
 import { CollectionObject } from "../models/CollectionObject";
-import Details from "./Details";
-import FavoriteButton from "./FavoriteButton";
-import SearchInputs from "./SearchInputs";
-import Tooltip from "@mui/material/Tooltip";
-import FavoritesDrawer from "./FavoritesDrawer";
 import CardCollection from "./CardCollection";
+import Details from "./Details";
+import FavoritesDrawer from "./FavoritesDrawer";
+import SearchInputs from "./SearchInputs";
 
 const Collection = () => {
   const [data, setData] = useState<{ objectIDs: number[] }>();
@@ -38,7 +31,6 @@ const Collection = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [favorites, setFavorites] = useState<{ [key: number]: boolean }>({});
 
-  // Carregar favoritos ao montar
   useEffect(() => {
     const storedFavorites: { [key: number]: boolean } = {};
 
@@ -74,8 +66,8 @@ const Collection = () => {
       try {
         const result = await fetchCollections({ filters });
         setData(result);
-      } catch (error) {
-        setError("Erro ao buscar coleções: " + error);
+      } catch {
+        setError("Houve um erro ao buscar coleções.");
         setLoading(false);
       }
     };
@@ -97,8 +89,8 @@ const Collection = () => {
 
           setPaginatedData([]);
         }
-      } catch (error) {
-        setError("Erro ao buscar detalhes dos objetos: " + error);
+      } catch {
+        setError("Houve um erro ao buscar os detalhes dos objetos.");
       } finally {
         setLoading(false);
       }
